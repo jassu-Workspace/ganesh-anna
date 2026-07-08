@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoyageAI – Smart Travel &amp; Tourism Assistant</title>
+<style>
+  :root{
+    --bg-a:#eaf6ff; --bg-b:#ffffff; --bg-c:#dbeeff;
+    --surface:rgba(255,255,255,0.62); --surface-solid:#ffffff;
+    --border-glass:rgba(255,255,255,0.55); --border-hair:rgba(11,37,64,0.12);
+    --ink:#0b2540; --ink-soft:#4d6479; --ink-faint:#7f93a6;
+    --blue-900:#04263f; --blue-700:#0b5a94; --blue-600:#1471b8; --blue-500:#1f8fe0;
+    --blue-300:#7cc5f5; --blue-100:#e3f4ff; --blue-050:#f3faff;
+    --gold:#b8873f; --gold-soft:#e9d6ae;
+    --danger:#b3413a; --danger-bg:#fbe9e7;
+    --shadow: 0 20px 60px -25px rgba(6,40,70,0.35);
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --radius: 16px;
+  }
+  [data-theme="dark"]{
+    --bg-a:#03101d; --bg-b:#041b2e; --bg-c:#062840;
+    --surface:rgba(10,32,52,0.6); --surface-solid:#0b2136;
+    --border-glass:rgba(255,255,255,0.08); --border-hair:rgba(255,255,255,0.1);
+    --ink:#eaf6ff; --ink-soft:#a9c7dd; --ink-faint:#6f8ba1;
+    --blue-900:#eaf6ff; --blue-700:#8fd0ff; --blue-600:#6bbcf5; --blue-500:#4fa8ee;
+    --blue-300:#2b6a97; --blue-100:#0f2c42; --blue-050:#0a2033;
+    --gold:#e0bd7c; --gold-soft:#3a2f1c;
+    --danger:#e8837a; --danger-bg:#3a1c1a;
+    --shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background: radial-gradient(1200px 800px at 15% -10%, var(--bg-c), transparent),
+                radial-gradient(1000px 700px at 110% 10%, var(--bg-c), transparent),
+                linear-gradient(160deg, var(--bg-a) 0%, var(--bg-b) 55%, var(--bg-c) 100%);
+    min-height:100vh;
+    transition: background 0.4s ease, color 0.3s ease;
+  }
+  .app{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:230px; flex-shrink:0; padding:22px 16px; display:flex; flex-direction:column; gap:6px;
+    border-right:1px solid var(--border-hair);
+    background:var(--surface); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:6px 8px 20px 8px;}
+  .brand-mark{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(135deg, var(--blue-500), var(--blue-700));
+    display:flex;align-items:center;justify-content:center; flex-shrink:0;
+    box-shadow: 0 6px 16px -6px var(--blue-600);
+  }
+  .brand-mark svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
+  .brand-text .title{font-family:var(--font-display); font-size:19px; font-weight:700; letter-spacing:0.2px; line-height:1.1;}
+  .brand-text .sub{font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--ink-faint); margin-top:2px;}
+
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:12px; cursor:pointer;
+    color:var(--ink-soft); font-size:13.5px; font-weight:600; letter-spacing:0.1px;
+    border:1px solid transparent; transition: all 0.15s ease; user-select:none;
+  }
+  .nav-item svg{width:17px;height:17px; stroke:currentColor; fill:none; stroke-width:1.8; flex-shrink:0;}
+  .nav-item:hover{ background:rgba(31,143,224,0.08); color:var(--ink);}
+  .nav-item.active{
+    background:linear-gradient(135deg, var(--blue-500), var(--blue-700)); color:#fff;
+    box-shadow: 0 8px 18px -8px var(--blue-600);
+  }
+  .sidebar-footer{margin-top:auto; padding-top:14px; border-top:1px solid var(--border-hair);}
+  .theme-toggle{
+    display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:12px;
+    background:rgba(31,143,224,0.06); font-size:12.5px; color:var(--ink-soft); cursor:pointer; font-weight:600;
+  }
+  .theme-toggle .dot{width:34px;height:19px;border-radius:20px;background:var(--border-hair); position:relative; transition:.2s;}
+  .theme-toggle .dot::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--blue-700);transition:.2s;}
+  [data-theme="dark"] .theme-toggle .dot::after{left:17px; background:var(--gold);}
+
+  /* ---------- Main ---------- */
+  .main{flex:1; min-width:0; padding:26px 34px 60px; max-width:980px;}
+  .topbar{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:8px;}
+  .topbar h1{font-family:var(--font-display); font-size:26px; margin:0; font-weight:700;}
+  .topbar p{margin:4px 0 0; color:var(--ink-soft); font-size:13.5px;}
+
+  .glass-card{
+    background:var(--surface); border:1px solid var(--border-glass); border-radius:var(--radius);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow); padding:22px;
+  }
+  .section{display:none; animation: fadeUp 0.35s ease;}
+  .section.active{display:block;}
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  label{display:block; font-size:11.5px; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; color:var(--ink-faint); margin:0 0 6px;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border-hair);
+    background:var(--surface-solid); color:var(--ink); font-family:var(--font-body); font-size:14px; outline:none;
+  }
+  input:focus, select:focus, textarea:focus{ border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(31,143,224,0.15); }
+  .field{margin-bottom:14px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media (max-width:640px){ .grid2, .grid3{grid-template-columns:1fr;} .main{padding:20px 16px 60px;} .sidebar{position:fixed; z-index:20; transform:translateX(-100%); transition:.25s;} .sidebar.open{transform:translateX(0);} .mobile-menu-btn{display:flex !important;} }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+    padding:11px 20px; border-radius:11px; border:none; font-weight:700; font-size:13.5px; letter-spacing:0.2px;
+    background:linear-gradient(135deg, var(--blue-500), var(--blue-700)); color:#fff;
+    box-shadow: 0 10px 22px -10px var(--blue-600); transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(0) scale(0.98);}
+  .btn.ghost{ background:transparent; color:var(--blue-700); border:1px solid var(--blue-300); box-shadow:none; }
+  .btn[disabled]{opacity:0.55; cursor:not-allowed; transform:none;}
+  .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+
+  /* ---------- Chat ---------- */
+  .chat-wrap{display:flex; flex-direction:column; height:calc(100vh - 150px); min-height:460px;}
+  .chat-scroll{flex:1; overflow-y:auto; padding:6px 4px 14px; display:flex; flex-direction:column; gap:14px;}
+  .msg{max-width:78%; padding:12px 15px; border-radius:16px; font-size:14px; line-height:1.55; white-space:pre-wrap;}
+  .msg.user{align-self:flex-end; background:linear-gradient(135deg, var(--blue-500), var(--blue-700)); color:#fff; border-bottom-right-radius:4px;}
+  .msg.ai{align-self:flex-start; background:var(--surface-solid); border:1px solid var(--border-hair); border-bottom-left-radius:4px;}
+  .msg.ai::before{content:'✈ VoyageAI'; display:block; font-size:10px; font-weight:700; letter-spacing:0.6px; color:var(--blue-600); margin-bottom:5px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 4px;}
+  .chip{
+    padding:8px 13px; border-radius:20px; border:1px solid var(--blue-300); color:var(--blue-700);
+    font-size:12.5px; font-weight:600; cursor:pointer; background:rgba(124,197,245,0.08);
+  }
+  .chip:hover{ background:rgba(124,197,245,0.18); }
+  .chat-input-row{display:flex; gap:10px; padding-top:12px; border-top:1px solid var(--border-hair);}
+  .chat-input-row textarea{resize:none; height:46px; padding-top:12px;}
+  .typing{display:flex; gap:4px; padding:4px 0;}
+  .typing span{width:6px;height:6px;border-radius:50%; background:var(--blue-500); animation:bounce 1.2s infinite ease-in-out;}
+  .typing span:nth-child(2){animation-delay:.15s;} .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0); opacity:0.4;} 40%{transform:translateY(-4px); opacity:1;}}
+
+  /* ---------- Boarding pass itinerary ---------- */
+  .pass{
+    position:relative; background:var(--surface-solid); border:1px solid var(--border-hair); border-radius:14px;
+    display:grid; grid-template-columns: 1fr 120px; overflow:hidden; margin-bottom:18px; box-shadow:var(--shadow);
+  }
+  .pass-main{padding:18px 20px;}
+  .pass-stub{
+    background:linear-gradient(160deg, var(--blue-700), var(--blue-900)); color:#fff; padding:18px 14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:6px;
+    font-family:var(--font-mono);
+  }
+  .pass-divider{ position:absolute; right:120px; top:0; bottom:0; width:0; border-left:2px dashed var(--border-hair); }
+  .pass::before, .pass::after{
+    content:''; position:absolute; width:20px; height:20px; border-radius:50%; background:var(--bg-b); right:110px;
+  }
+  .pass::before{top:-10px;} .pass::after{bottom:-10px;}
+  .pass-day-label{font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--blue-600); font-weight:700; text-transform:uppercase;}
+  .pass-title{font-family:var(--font-display); font-size:18px; margin:4px 0 12px; font-weight:700;}
+  .pass-slot{display:grid; grid-template-columns:80px 1fr; gap:10px; padding:7px 0; font-size:13.5px; border-top:1px dashed var(--border-hair);}
+  .pass-slot:first-of-type{border-top:none;}
+  .pass-slot .k{font-family:var(--font-mono); font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-faint); padding-top:2px;}
+  .pass-stub .code{font-size:22px; font-weight:700; letter-spacing:1px;}
+  .pass-stub .sub{font-size:9.5px; letter-spacing:1.2px; opacity:0.8; text-transform:uppercase;}
+  @media (max-width:640px){ .pass{grid-template-columns:1fr 84px;} .pass::before,.pass::after,.pass-divider{right:74px;} }
+
+  /* ---------- Budget ---------- */
+  .budget-layout{display:grid; grid-template-columns: 1fr 260px; gap:24px;}
+  @media (max-width:760px){ .budget-layout{grid-template-columns:1fr;} }
+  .slider-row{margin-bottom:16px;}
+  .slider-row .top{display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;}
+  .slider-row .top .label{font-weight:700; color:var(--ink);}
+  .slider-row .top .val{font-family:var(--font-mono); color:var(--blue-700); font-weight:700;}
+  input[type=range]{ -webkit-appearance:none; width:100%; height:6px; border-radius:6px; background:var(--border-hair); outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--blue-600); cursor:pointer; border:3px solid var(--surface-solid); box-shadow:0 2px 6px rgba(0,0,0,0.25);}
+  .legend{display:flex; flex-direction:column; gap:9px; margin-top:10px;}
+  .legend-item{display:flex; align-items:center; gap:8px; font-size:12.5px;}
+  .legend-dot{width:10px;height:10px;border-radius:3px; flex-shrink:0;}
+  .legend .amt{margin-left:auto; font-family:var(--font-mono); color:var(--ink-soft);}
+  .total-badge{ text-align:center; padding:16px; }
+  .total-badge .num{font-family:var(--font-display); font-size:30px; font-weight:700; color:var(--blue-700);}
+  .total-badge .lbl{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-faint); margin-top:2px;}
+
+  /* ---------- Packing ---------- */
+  .pack-group{margin-bottom:16px;}
+  .pack-group h4{font-family:var(--font-display); font-size:15.5px; margin:0 0 8px; color:var(--blue-700);}
+  .pack-item{display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid var(--border-hair); font-size:13.5px;}
+  .pack-item input{width:16px;height:16px; accent-color:var(--blue-600);}
+  .pack-item.checked span{text-decoration:line-through; color:var(--ink-faint);}
+
+  /* ---------- Safety ---------- */
+  .safety-card{ display:flex; gap:12px; padding:14px; border-radius:12px; background:var(--danger-bg); border:1px solid rgba(179,65,58,0.25); margin-bottom:14px;}
+  .safety-card svg{width:20px;height:20px;stroke:var(--danger); flex-shrink:0; margin-top:1px;}
+  .safety-card b{color:var(--danger);}
+  .info-block{background:var(--surface-solid); border:1px solid var(--border-hair); border-radius:12px; padding:16px; margin-bottom:14px; font-size:13.5px; line-height:1.6;}
+  .info-block h4{font-family:var(--font-display); margin:0 0 8px; font-size:15px;}
+
+  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-faint); }
+  .empty-state svg{width:44px;height:44px; stroke:var(--blue-300); margin-bottom:10px;}
+  .loading-line{font-size:12.5px; color:var(--ink-faint); display:flex; align-items:center; gap:8px; padding:10px 0;}
+  .spin{width:14px;height:14px;border-radius:50%; border:2px solid var(--border-hair); border-top-color:var(--blue-600); animation:spin 0.8s linear infinite;}
+  @keyframes spin{ to{transform:rotate(360deg);} }
+
+  .mobile-menu-btn{display:none; position:fixed; top:16px; left:16px; z-index:30; width:40px; height:40px; border-radius:10px; background:var(--surface-solid); border:1px solid var(--border-hair); align-items:center; justify-content:center; box-shadow:var(--shadow); cursor:pointer;}
+  .mobile-menu-btn svg{width:18px;height:18px; stroke:var(--ink);}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--border-hair); border-radius:8px;}
+</style>
+</head>
+<body data-theme="light">
+<div class="mobile-menu-btn" id="mobileMenuBtn"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg></div>
+
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" stroke-linejoin="round"/></svg></div>
+      <div class="brand-text"><div class="title">VoyageAI</div><div class="sub">Travel Assistant</div></div>
+    </div>
+
+    <div class="nav-item active" data-section="chat"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-8.5 8.5 8.5 8.5 0 01-4-1L3 20l1-5.5A8.38 8.38 0 013 11.5 8.5 8.5 0 0111.5 3a8.5 8.5 0 019.5 8.5z"/></svg>Chat assistant</div>
+    <div class="nav-item" data-section="planner"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Trip planner</div>
+    <div class="nav-item" data-section="budget"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Budget planner</div>
+    <div class="nav-item" data-section="packing"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>Packing list</div>
+    <div class="nav-item" data-section="safety"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Safety &amp; weather</div>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle" id="themeToggle"><span>Dark mode</span><span class="dot"></span></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- CHAT -->
+    <div class="section active" id="section-chat">
+      <div class="topbar">
+        <div><h1>Ask your travel consultant</h1><p>Plan trips, get recommendations, and ask anything in plain language.</p></div>
+      </div>
+      <div class="glass-card chat-wrap">
+        <div class="chat-scroll" id="chatScroll"></div>
+        <div id="chipRow" class="chips">
+          <div class="chip" data-prompt="Suggest a Devoational Trip under ₹10,000">Devotional Trip under 10k</div>
+          <div class="chip" data-prompt="Best places to visit in December">Best places in December</div>
+          <div class="chip" data-prompt="Plan a 5-day Goa trip">5-day Goa trip</div>
+          <div class="chip" data-prompt="What should I pack for Ladakh?">Pack for Ladakh</div>
+        </div>
+        <div class="chat-input-row">
+          <textarea id="chatInput" placeholder="e.g. Cheap hotels near Mysore Palace..."></textarea>
+          <button class="btn" id="chatSend"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANNER -->
+    <div class="section" id="section-planner">
+      <div class="topbar"><div><h1>Trip planner</h1><p>Tell us the basics and get a full day-by-day itinerary.</p></div></div>
+      <div class="glass-card" style="margin-bottom:20px;">
+        <div class="grid2">
+          <div class="field"><label>Starting location</label><input type="text" id="pFrom" placeholder="Hyderabad"></div>
+          <div class="field"><label>Destination</label><input type="text" id="pTo" placeholder="Goa"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label>Number of days</label><input type="number" id="pDays" value="4" min="1" max="14"></div>
+          <div class="field"><label>Budget (₹)</label><input type="number" id="pBudget" value="30000" min="1000" step="1000"></div>
+          <div class="field"><label>Travelers</label><input type="number" id="pTravelers" value="2" min="1" max="20"></div>
+        </div>
+        <div class="field">
+          <label>Travel type</label>
+          <select id="pType">
+            <option>Solo</option><option selected>Couple</option><option>Family</option><option>Friends</option><option>Business</option>
+          </select>
+        </div>
+        <button class="btn" id="pGenerate"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Generate itinerary</button>
+      </div>
+      <div id="itineraryOut"></div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="section" id="section-budget">
+      <div class="topbar"><div><h1>Budget planner</h1><p>Split your total budget and see the full breakdown.</p></div></div>
+      <div class="glass-card" style="margin-bottom:16px;">
+        <div class="grid2">
+          <div class="field"><label>Total budget (₹)</label><input type="number" id="bTotal" value="50000" min="1000" step="1000"></div>
+          <div class="field"><label>Destination style</label>
+            <select id="bStyle"><option value="budget">Budget stay</option><option value="mid" selected>Mid-range</option><option value="luxury">Luxury</option></select>
+          </div>
+        </div>
+        <button class="btn ghost" id="bAiFill" style="margin-top:4px;"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Ask AI to suggest a split</button>
+      </div>
+      <div class="glass-card budget-layout">
+        <div>
+          <div class="slider-row"><div class="top"><span class="label">Hotel</span><span class="val" id="vHotel"></span></div><input type="range" id="sHotel" min="0" max="60" value="30"></div>
+          <div class="slider-row"><div class="top"><span class="label">Food</span><span class="val" id="vFood"></span></div><input type="range" id="sFood" min="0" max="60" value="20"></div>
+          <div class="slider-row"><div class="top"><span class="label">Transport</span><span class="val" id="vTransport"></span></div><input type="range" id="sTransport" min="0" max="60" value="20"></div>
+          <div class="slider-row"><div class="top"><span class="label">Entry tickets</span><span class="val" id="vTickets"></span></div><input type="range" id="sTickets" min="0" max="60" value="10"></div>
+          <div class="slider-row"><div class="top"><span class="label">Shopping</span><span class="val" id="vShopping"></span></div><input type="range" id="sShopping" min="0" max="60" value="10"></div>
+          <div class="slider-row"><div class="top"><span class="label">Emergency reserve</span><span class="val" id="vEmergency"></span></div><input type="range" id="sEmergency" min="0" max="60" value="10"></div>
+        </div>
+        <div>
+          <svg id="donut" viewBox="0 0 120 120" width="100%" style="max-width:220px; display:block; margin:0 auto;"></svg>
+          <div class="total-badge"><div class="num" id="allocTotal">100%</div><div class="lbl">of budget allocated</div></div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACKING -->
+    <div class="section" id="section-packing">
+      <div class="topbar"><div><h1>Packing assistant</h1><p>A checklist tailored to your destination and season.</p></div></div>
+      <div class="glass-card" style="margin-bottom:20px;">
+        <div class="grid3">
+          <div class="field"><label>Destination</label><input type="text" id="kDest" placeholder="Ladakh"></div>
+          <div class="field"><label>Month of travel</label><input type="text" id="kMonth" placeholder="December"></div>
+          <div class="field"><label>Trip duration (days)</label><input type="number" id="kDays" value="5" min="1" max="30"></div>
+        </div>
+        <button class="btn" id="kGenerate"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>Build my checklist</button>
+      </div>
+      <div id="packOut"></div>
+    </div>
+
+    <!-- SAFETY -->
+    <div class="section" id="section-safety">
+      <div class="topbar"><div><h1>Safety &amp; weather briefing</h1><p>General guidance — always confirm live details closer to departure.</p></div></div>
+      <div class="safety-card"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L2.7 18a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><div><b>Before every trip:</b> save the local emergency number, share your itinerary with someone at home, and keep a photo of your passport/ID stored separately from the original.</div></div>
+      <div class="glass-card" style="margin-bottom:20px;">
+        <div class="grid2">
+          <div class="field"><label>Destination</label><input type="text" id="sDest" placeholder="Bali, Indonesia"></div>
+          <div class="field"><label>Month of travel (optional)</label><input type="text" id="sMonth" placeholder="August"></div>
+        </div>
+        <button class="btn" id="sGenerate"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Get briefing</button>
+      </div>
+      <div id="safetyOut"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+	const API_BASE = window.VOYAGEAI_API_BASE || "http://localhost:5001/api";
+
+	/* ---------------- storage helpers ---------------- */
+	async function loadKey(key, fallback){
+	  try{
+	    if(window.storage && typeof window.storage.get === "function"){
+	      const r = await window.storage.get(key, false);
+	      return r ? JSON.parse(r.value) : fallback;
+	    }
+	    const r = localStorage.getItem(key);
+	    return r ? JSON.parse(r) : fallback;
+	  }catch(e){ return fallback; }
+	}
+	async function saveKey(key, value){
+	  try{
+	    const serialized = JSON.stringify(value);
+	    if(window.storage && typeof window.storage.set === "function"){
+	      await window.storage.set(key, serialized, false);
+	    } else {
+	      localStorage.setItem(key, serialized);
+	    }
+	  }catch(e){ console.error("storage save failed", e); }
+	}
+
+	/* ---------------- backend API helper ---------------- */
+	async function apiPost(path, body){
+	  try{
+	    const res = await fetch(API_BASE + path, {
+	      method:"POST",
+	      headers:{ "Content-Type":"application/json" },
+	      body: JSON.stringify(body)
+	    });
+	    const data = await res.json().catch(() => ({}));
+	    if(!res.ok) throw new Error(data.error || "Request failed");
+	    return data;
+	  }catch(e){
+	    console.error(e);
+	    throw e;
+	  }
+	}
+	async function callChat(message){
+	  try{
+	    const data = await apiPost("/chat", { message });
+	    return data.reply || "Sorry, I couldn't generate a response just now.";
+	  }catch(e){
+	    return "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:5000, then try again.";
+	  }
+	}
+	async function callAIJSON(path, body){
+	  try{
+	    return await apiPost(path, body);
+	  }catch(e){
+	    return { error: "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:5000, then try again." };
+	  }
+	}
+	async function callAIText(path, body, responseKey){
+	  try{
+	    const data = await apiPost(path, body);
+	    return data[responseKey] || "Sorry, I couldn't generate a response just now.";
+	  }catch(e){
+	    return "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:5000, then try again.";
+	  }
+	}
+	/* Backward-compatible parser for any plain-text fallback responses. */
+	function extractJSON(text){
+	  const cleaned = text.replace(/```json/gi,"").replace(/```/g,"").trim();
+	  const start = cleaned.indexOf("{"); const end = cleaned.lastIndexOf("}");
+	  if(start === -1 || end === -1) throw new Error("no json found");
+	  return JSON.parse(cleaned.slice(start, end+1));
+	}
+
+/* ---------------- nav ---------------- */
+document.querySelectorAll(".nav-item").forEach(item=>{
+  item.addEventListener("click", ()=>{
+    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    item.classList.add("active");
+    document.getElementById("section-"+item.dataset.section).classList.add("active");
+    document.getElementById("sidebar").classList.remove("open");
+  });
+});
+document.getElementById("mobileMenuBtn").addEventListener("click", ()=>{
+  document.getElementById("sidebar").classList.toggle("open");
+});
+
+/* ---------------- theme ---------------- */
+(async function initTheme(){
+  const theme = await loadKey("theme", "light");
+  document.body.setAttribute("data-theme", theme);
+})();
+document.getElementById("themeToggle").addEventListener("click", async ()=>{
+  const cur = document.body.getAttribute("data-theme");
+  const next = cur === "light" ? "dark" : "light";
+  document.body.setAttribute("data-theme", next);
+  await saveKey("theme", next);
+});
+
+/* ================= CHAT ================= */
+let chatHistory = [];
+const chatScroll = document.getElementById("chatScroll");
+
+function renderMessage(role, text){
+  const div = document.createElement("div");
+  div.className = "msg " + (role === "user" ? "user" : "ai");
+  div.textContent = text;
+  chatScroll.appendChild(div);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+  return div;
+}
+
+async function initChat(){
+  chatHistory = await loadKey("chatHistory", []);
+  const profile = await loadKey("profile", {});
+  if(chatHistory.length === 0){
+    let greeting = "Hi, I'm your VoyageAI travel consultant. Tell me where you'd like to go, your budget, and how many days you have, and I'll help you plan the perfect trip.";
+    if(profile.name){ greeting = "Welcome back, " + profile.name + "! " + greeting; }
+    renderMessage("ai", greeting);
+  } else {
+    chatHistory.forEach(m => renderMessage(m.role, m.content));
+  }
+}
+initChat();
+
+async function sendChat(text){
+  if(!text.trim()) return;
+  renderMessage("user", text);
+  chatHistory.push({role:"user", content:text});
+  document.getElementById("chatInput").value = "";
+
+  const typing = document.createElement("div");
+  typing.className = "msg ai";
+  typing.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  chatScroll.appendChild(typing);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+
+	  const reply = await callChat(text);
+  typing.remove();
+  renderMessage("ai", reply);
+  chatHistory.push({role:"assistant", content:reply});
+  await saveKey("chatHistory", chatHistory.slice(-30));
+}
+
+document.getElementById("chatSend").addEventListener("click", ()=> sendChat(document.getElementById("chatInput").value));
+document.getElementById("chatInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); sendChat(e.target.value); }
+});
+document.getElementById("chipRow").addEventListener("click", e=>{
+  const chip = e.target.closest(".chip");
+  if(chip) sendChat(chip.dataset.prompt);
+});
+
+/* ================= TRIP PLANNER ================= */
+document.getElementById("pGenerate").addEventListener("click", async ()=>{
+  const from = document.getElementById("pFrom").value || "your city";
+  const to = document.getElementById("pTo").value || "a destination of your choice";
+  const days = parseInt(document.getElementById("pDays").value) || 3;
+  const budget = document.getElementById("pBudget").value || "flexible";
+  const travelers = document.getElementById("pTravelers").value || "1";
+  const type = document.getElementById("pType").value;
+
+  const out = document.getElementById("itineraryOut");
+  out.innerHTML = '<div class="loading-line"><div class="spin"></div>Building your day-by-day itinerary...</div>';
+
+	  const data = await callAIJSON("/itinerary/generate", {
+	    from,
+	    destination: to,
+	    days,
+	    budget: Number(budget) || 50000,
+	    travelers: Number(travelers) || 1,
+	    travelType: type.toLowerCase()
+	  });
+	  try{
+	    if(data.error) throw new Error(data.error);
+	    let html = `<div class="glass-card" style="margin-bottom:18px;"><b style="font-family:var(--font-display); font-size:16px;">Trip overview</b><p style="margin:8px 0 0; font-size:13.5px; color:var(--ink-soft);">${data.summary || ""}</p></div>`;
+    (data.days || []).forEach(d=>{
+      html += `<div class="pass"><div class="pass-main">
+        <div class="pass-day-label">Day 0${d.day || ""}</div>
+        <div class="pass-title">${d.title || (from + " → " + to)}</div>
+        <div class="pass-slot"><div class="k">Morning</div><div>${d.morning || "-"}</div></div>
+        <div class="pass-slot"><div class="k">Afternoon</div><div>${d.afternoon || "-"}</div></div>
+        <div class="pass-slot"><div class="k">Evening</div><div>${d.evening || "-"}</div></div>
+        <div class="pass-slot"><div class="k">Night</div><div>${d.night || "-"}</div></div>
+      </div>
+      <div class="pass-divider"></div>
+      <div class="pass-stub"><div class="code">${(to||"TRP").slice(0,3).toUpperCase()}</div><div class="sub">Boarding</div><div class="sub">Day ${d.day}/${days}</div></div>
+      </div>`;
+    });
+    out.innerHTML = html;
+    await saveKey("lastItinerary", {from, to, days, budget, travelers, type, data});
+	  }catch(e){
+	    out.innerHTML = `<div class="glass-card"><p style="white-space:pre-wrap; font-size:13.5px;">${data.error || e.message}</p></div>`;
+	  }
+	});
+
+/* ================= BUDGET PLANNER ================= */
+const sliderIds = ["sHotel","sFood","sTransport","sTickets","sShopping","sEmergency"];
+const sliderColors = {sHotel:"#1f8fe0", sFood:"#7cc5f5", sTransport:"#0b5a94", sTickets:"#b8873f", sShopping:"#4d6479", sEmergency:"#b3413a"};
+const sliderLabels = {sHotel:"Hotel", sFood:"Food", sTransport:"Transport", sTickets:"Entry tickets", sShopping:"Shopping", sEmergency:"Emergency reserve"};
+
+function renderBudget(){
+  const vals = sliderIds.map(id => parseFloat(document.getElementById(id).value) || 0);
+  const sum = vals.reduce((a,b)=>a+b,0) || 1;
+  const total = parseFloat(document.getElementById("bTotal").value) || 0;
+
+  sliderIds.forEach((id,i)=>{
+    const pct = Math.round((vals[i]/sum)*100);
+    document.getElementById("v"+id.slice(1)).textContent = pct + "%  ·  ₹" + Math.round(total*pct/100).toLocaleString("en-IN");
+  });
+  document.getElementById("allocTotal").textContent = "₹" + Math.round(total).toLocaleString("en-IN");
+
+  // donut
+  const donut = document.getElementById("donut");
+  let cursor = 0; const r = 50, cx=60, cy=60;
+  let paths = "";
+  sliderIds.forEach((id,i)=>{
+    const pct = vals[i]/sum;
+    const start = cursor * 2*Math.PI - Math.PI/2;
+    cursor += pct;
+    const end = cursor * 2*Math.PI - Math.PI/2;
+    const x1 = cx + r*Math.cos(start), y1 = cy + r*Math.sin(start);
+    const x2 = cx + r*Math.cos(end), y2 = cy + r*Math.sin(end);
+    const large = pct > 0.5 ? 1 : 0;
+    if(pct > 0){
+      paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${sliderColors[id]}" opacity="0.9"/>`;
+    }
+  });
+  donut.innerHTML = paths + `<circle cx="${cx}" cy="${cy}" r="26" fill="var(--surface-solid)"/>`;
+
+  const legend = document.getElementById("legend");
+  legend.innerHTML = sliderIds.map((id,i)=>{
+    const pct = Math.round((vals[i]/sum)*100);
+    return `<div class="legend-item"><span class="legend-dot" style="background:${sliderColors[id]}"></span>${sliderLabels[id]}<span class="amt">${pct}%</span></div>`;
+  }).join("");
+}
+sliderIds.forEach(id => document.getElementById(id).addEventListener("input", renderBudget));
+document.getElementById("bTotal").addEventListener("input", renderBudget);
+renderBudget();
+
+document.getElementById("bAiFill").addEventListener("click", async ()=>{
+  const style = document.getElementById("bStyle").value;
+  const total = document.getElementById("bTotal").value;
+  const btn = document.getElementById("bAiFill");
+  btn.disabled = true; btn.textContent = "Thinking...";
+	  const data = await callAIJSON("/budget/split", { totalBudget: Number(total) || 0, style });
+	  try{
+	    if(data.error) throw new Error(data.error);
+	    const d = data.percentages || data;
+	    document.getElementById("sHotel").value = d.hotel ?? 30;
+    document.getElementById("sFood").value = d.food ?? 20;
+    document.getElementById("sTransport").value = d.transport ?? 20;
+    document.getElementById("sTickets").value = d.tickets ?? 10;
+    document.getElementById("sShopping").value = d.shopping ?? 10;
+    document.getElementById("sEmergency").value = d.emergency ?? 10;
+    renderBudget();
+	  }catch(e){ console.error(e); }
+  btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Ask AI to suggest a split';
+});
+
+/* ================= PACKING ================= */
+document.getElementById("kGenerate").addEventListener("click", async ()=>{
+  const dest = document.getElementById("kDest").value || "your destination";
+  const month = document.getElementById("kMonth").value || "your travel month";
+  const days = document.getElementById("kDays").value || 5;
+  const out = document.getElementById("packOut");
+  out.innerHTML = '<div class="loading-line"><div class="spin"></div>Building your packing list...</div>';
+
+	  const data = await callAIJSON("/packing/generate", { destination: dest, month, days: Number(days) || 5 });
+	  try{
+	    if(data.error) throw new Error(data.error);
+	    const checkedState = await loadKey("packChecked", {});
+    let html = "";
+    data.groups.forEach((g, gi)=>{
+      html += `<div class="glass-card pack-group"><h4>${g.name}</h4>`;
+      g.items.forEach((item, ii)=>{
+        const key = gi+"-"+ii;
+        const checked = checkedState[item] ? "checked" : "";
+        html += `<label class="pack-item ${checked ? "checked" : ""}"><input type="checkbox" data-item="${item.replace(/"/g,'')}" ${checked}><span>${item}</span></label>`;
+      });
+      html += "</div>";
+    });
+    out.innerHTML = html;
+    document.querySelectorAll(".pack-item input").forEach(cb=>{
+      cb.addEventListener("change", async ()=>{
+        cb.closest(".pack-item").classList.toggle("checked", cb.checked);
+        const state = await loadKey("packChecked", {});
+        state[cb.dataset.item] = cb.checked;
+        await saveKey("packChecked", state);
+      });
+    });
+	  }catch(e){
+	    out.innerHTML = `<div class="glass-card"><p style="white-space:pre-wrap; font-size:13.5px;">${data.error || e.message}</p></div>`;
+	  }
+	});
+
+/* ================= SAFETY & WEATHER ================= */
+document.getElementById("sGenerate").addEventListener("click", async ()=>{
+  const dest = document.getElementById("sDest").value || "your destination";
+  const month = document.getElementById("sMonth").value;
+  const out = document.getElementById("safetyOut");
+  out.innerHTML = '<div class="loading-line"><div class="spin"></div>Preparing your briefing...</div>';
+
+	  const d = await callAIJSON("/safety/briefing", { destination: dest, month });
+	  try{
+	    if(d.error) throw new Error(d.error);
+	    out.innerHTML = `
+      <div class="info-block"><h4>Typical weather</h4><p>${d.weather || ""}</p><p style="color:var(--ink-soft); margin-top:8px;"><b>Best season to visit:</b> ${d.best_season || "-"}</p><p style="color:var(--ink-soft);"><b>Packing note:</b> ${d.packing_note || "-"}</p></div>
+      <div class="info-block"><h4>Safety tips</h4><ul style="margin:0; padding-left:18px;">${(d.safety||[]).map(s=>`<li style="margin-bottom:6px;">${s}</li>`).join("")}</ul></div>
+      <div class="info-block"><h4>Common scam patterns to watch for</h4><ul style="margin:0; padding-left:18px;">${(d.scams||[]).map(s=>`<li style="margin-bottom:6px;">${s}</li>`).join("")}</ul></div>
+      <p style="font-size:12px; color:var(--ink-faint);">This is general seasonal guidance, not a live forecast or official advisory — check your government's travel advisory and a live weather app before departure.</p>
+    `;
+	  }catch(e){
+	    out.innerHTML = `<div class="glass-card"><p style="white-space:pre-wrap; font-size:13.5px;">${d.error || e.message}</p></div>`;
+	  }
+	});
+
+/* ================= PROFILE QUICK-CAPTURE (conversation memory) ================= */
+(async function seedProfileIfNeeded(){
+  const profile = await loadKey("profile", null);
+  if(profile === null) await saveKey("profile", {});
+})();
+</script>
+</body>
+</html>

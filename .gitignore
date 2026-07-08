@@ -1,0 +1,7 @@
+.DS_Store
+/package-lock.json
+node_modules/
+.env
+.env.*
+!.env.example
+voyageai-backend/config/firebase-service-account.json
