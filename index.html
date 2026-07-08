@@ -381,14 +381,14 @@
 	    const data = await apiPost("/chat", { message });
 	    return data.reply || "Sorry, I couldn't generate a response just now.";
 	  }catch(e){
-	    return "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:1412, then try again.";
+	    return "I couldn't reach the VoyageAI backend API. If you just deployed, make sure the backend environment variables are set correctly on Vercel.";
 	  }
 	}
 	async function callAIJSON(path, body){
 	  try{
 	    return await apiPost(path, body);
 	  }catch(e){
-	    return { error: "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:1412, then try again." };
+	    return { error: "I couldn't reach the VoyageAI backend API. If you just deployed, make sure the backend environment variables are set correctly on Vercel." };
 	  }
 	}
 	async function callAIText(path, body, responseKey){
@@ -396,7 +396,7 @@
 	    const data = await apiPost(path, body);
 	    return data[responseKey] || "Sorry, I couldn't generate a response just now.";
 	  }catch(e){
-	    return "I couldn't reach the VoyageAI backend. Make sure it is running on http://localhost:1412, then try again.";
+	    return "I couldn't reach the VoyageAI backend API. If you just deployed, make sure the backend environment variables are set correctly on Vercel.";
 	  }
 	}
 	/* Backward-compatible parser for any plain-text fallback responses. */
