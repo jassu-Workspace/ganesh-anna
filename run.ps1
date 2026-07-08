@@ -18,4 +18,4 @@ Write-Host "Waiting for servers to initialize..." -ForegroundColor Yellow
 Start-Sleep -Seconds 5
 
 Write-Host "Opening application in browser..." -ForegroundColor Green
-Start-Process "http://localhost:3000/voyageai.html"
+Start-Process "http://localhost:3000/index.html"

@@ -335,7 +335,8 @@
 </div>
 
 <script>
-	const API_BASE = window.VOYAGEAI_API_BASE || "http://localhost:1412/api";
+	const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+	const API_BASE = window.VOYAGEAI_API_BASE || (isLocal ? "http://localhost:1412/api" : "/api");
 
 	/* ---------------- storage helpers ---------------- */
 	async function loadKey(key, fallback){

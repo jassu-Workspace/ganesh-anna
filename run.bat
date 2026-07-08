@@ -26,7 +26,7 @@ echo Waiting for servers to initialize...
 timeout /t 5 /nobreak > nul
 
 echo Opening application in browser...
-start http://localhost:3000/voyageai.html
+start http://localhost:3000/index.html
 
 echo.
 echo =======================================
