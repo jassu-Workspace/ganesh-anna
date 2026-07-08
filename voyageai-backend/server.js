@@ -86,7 +86,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 1412;
 app.listen(PORT, () => {
   console.log(`VoyageAI backend running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
