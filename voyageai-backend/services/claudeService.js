@@ -1,6 +1,6 @@
 // services/claudeService.js
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-super-120b-a12b:free';
+const MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free';
 
 /**
  * Calls OpenRouter with a system prompt + user message and returns the plain text reply.
